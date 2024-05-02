@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('anime/', views.AnimesAPI.as_view()),
     path('auth/register/',views.UserRegister.as_view()),
     path('auth/login/', views.UserLogin.as_view()),
     path('get/user/', views.UserView.as_view()),

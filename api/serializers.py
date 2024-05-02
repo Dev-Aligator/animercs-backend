@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
+from django.db.models.expressions import fields
 from rest_framework import serializers
-from base.models import UserFeature
+from base.models import Anime, UserFeature
 from django.contrib.auth import get_user_model, authenticate
 
 
@@ -29,6 +30,11 @@ class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserModel
 		fields = ('email', 'username')
+
+class AnimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Anime
+        fields = '__all__'
 
 class UserFeatureSerializer(serializers.ModelSerializer):
 	class Meta:

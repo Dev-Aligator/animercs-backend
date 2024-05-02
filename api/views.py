@@ -1,14 +1,31 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from base.models import UserFeature, User
-from .serializers import UserFeatureSerializer
-from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer
+from base.models import Anime, UserFeature, User
+from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer, UserFeatureSerializer, AnimeSerializer
 from rest_framework import permissions, status
 from .validations import custom_validation, validate_email, validate_password
 from django.contrib.auth import get_user_model, login, logout
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from .csrfDessionAuthentication import CsrfExemptSessionAuthentication, BasicAuthentication
+import numpy as np
+import random
+
+
+
+class AnimesAPI(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self, request):
+        all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
+        random_animes = random.sample(all_animes_sorted_by_popularity[:1000], 10)
+        # Access anime entries using the random indices (converted to list)
+
+        serializer = AnimeSerializer(random_animes, many=True)
+        response_data = {
+            'animes': serializer.data,
+        }
+
+        return Response(response_data)
 
 
 class UserRegister(APIView):

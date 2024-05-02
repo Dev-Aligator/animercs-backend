@@ -74,11 +74,11 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_HEADERS = [
-    'ngrok-skip-browser-warning',
-    # Add any other headers you want to allow here
-]
-
+# CORS_ALLOW_HEADERS = [
+#     'ngrok-skip-browser-warning',
+#     # Add any other headers you want to allow here
+# ]
+#
 ROOT_URLCONF = 'Backend.urls'
 
 TEMPLATES = [
