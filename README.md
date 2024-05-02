@@ -77,6 +77,15 @@ Making database migrations
     python manage.py migrate
 ```
 
+To import Anime data to the database, <a href="https://drive.google.com/uc?export=download&id=15tc58nb4ZjTSPY2vd4BrKvZwQWZLAM12">Download this</a> CSV file containing anime data crawled from MyAnimeList,  having information for over 16,000 anime entries across various genres. 
+
+Modify the `scripts.py` file to specify the location of your downloaded `animes.csv` file.
+
+Then, Run the following command to execute the script and import the anime data into the database:
+```bash
+    python manage.py shell < scripts.py
+```
+**Note**: If you're utilizing your own data source, ensure its format aligns with the expected model fields in the Django model (Anime) for successful insertion.
 </details>
 
 ---
@@ -90,8 +99,8 @@ Making database migrations
     python manage.py runserver
 ```
 
----
-
+## References
+**Crawling Information**: For details regarding the process of crawling anime data from MyAnimeList or similar sources, please refer to the <a href="https://github.com/marlesson/scrapy_myanimelist" target="_blank">following repository</a>.
 
 
 <p align="center">Dev-Aligator</p>
