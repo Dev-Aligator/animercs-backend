@@ -8,4 +8,5 @@ urlpatterns = [
     path('get/user/', views.UserView.as_view()),
     path('auth/logout/', views.UserLogout.as_view()),
     path('authenticate/',views.IsAuthenticated.as_view()),
+    path('anime/<int:id>/', views.AnimeDetail.as_view()),
    ]

@@ -1,4 +1,4 @@
-from rest_framework.response import Response
+from rest_framework.response import Response, responses
 from rest_framework.decorators import api_view
 from base.models import Anime, UserFeature, User
 from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer, UserFeatureSerializer, AnimeSerializer
@@ -17,7 +17,7 @@ class AnimesAPI(APIView):
     permission_classes = (permissions.AllowAny,)
     def get(self, request):
         all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
-        random_animes = random.sample(all_animes_sorted_by_popularity[:1000], 10)
+        random_animes = random.sample(all_animes_sorted_by_popularity[:1000], 12)
         # Access anime entries using the random indices (converted to list)
 
         serializer = AnimeSerializer(random_animes, many=True)
@@ -27,6 +27,16 @@ class AnimesAPI(APIView):
 
         return Response(response_data)
 
+class AnimeDetail(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self, request, id):
+        anime = Anime.objects.get(id=id)
+        serializer = AnimeSerializer(anime)
+        response_data = {
+            'anime': serializer.data,
+        }
+
+        return Response(response_data)
 
 class UserRegister(APIView):
     permission_classes = (permissions.AllowAny,)
