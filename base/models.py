@@ -32,6 +32,17 @@ class UserFeature(models.Model):
     objects = models.Manager()
     def __str__(self):
         return self.user.username
+
+class UserAnime(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE)
+    is_watchlist = models.BooleanField(default=False)
+    is_favorite = models.BooleanField(default=False)
+
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.anime.title}"
     
 @receiver(post_save, sender=User)
 def create_user_feature(sender, instance, created, **kwargs):

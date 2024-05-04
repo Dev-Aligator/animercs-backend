@@ -1,6 +1,6 @@
 from rest_framework.response import Response, responses
 from rest_framework.decorators import api_view
-from base.models import Anime, UserFeature, User
+from base.models import Anime, UserFeature, User, UserAnime
 from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer, UserFeatureSerializer, AnimeSerializer
 from rest_framework import permissions, status
 from .validations import custom_validation, validate_email, validate_password
@@ -37,6 +37,27 @@ class AnimeDetail(APIView):
         }
 
         return Response(response_data)
+
+class AddUserAnime(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+
+    def post(self, request):
+        data = request.data
+        selectedAnime = Anime.objects.get(id=data["animeId"])
+        try:
+            userAnimeCollection = UserAnime.objects.get(user=request.user, anime=selectedAnime)
+        except:
+            userAnimeCollection = UserAnime.objects.create(user=request.user, anime=selectedAnime)
+        typeOfCollection = data['typeOfCollection']
+        if typeOfCollection == "favorite":
+            userAnimeCollection.is_favorite = True
+        elif typeOfCollection == "watchlist":
+            userAnimeCollection.is_watchlist = True
+        userAnimeCollection.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 class UserRegister(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -108,6 +129,7 @@ class UpdateUser(APIView):
 class IsAuthenticated(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     authentication_classes = (SessionAuthentication,)
+    
     def get(self, request):
         return Response({'authenticated': True}, status=status.HTTP_200_OK)
 

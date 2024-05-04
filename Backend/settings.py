@@ -72,6 +72,11 @@ CORS_ALLOWED_ORIGINS = [
     'http://0.0.0.0',
 ]
 
+CSRF_TRUSTED_ORIGINS = {
+    'http://localhost:5173',
+    'https://aligator.pythonanywhere.com',
+}
+
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS_ALLOW_HEADERS = [
