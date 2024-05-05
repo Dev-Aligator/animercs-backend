@@ -10,17 +10,44 @@ from rest_framework.views import APIView
 from .csrfDessionAuthentication import CsrfExemptSessionAuthentication, BasicAuthentication
 import numpy as np
 import random
-
-
+from fuzzywuzzy import fuzz
 
 class AnimesAPI(APIView):
     permission_classes = (permissions.AllowAny,)
-    def get(self, request):
-        all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
-        random_animes = random.sample(all_animes_sorted_by_popularity[:1000], 12)
-        # Access anime entries using the random indices (converted to list)
 
-        serializer = AnimeSerializer(random_animes, many=True)
+    def get(self, request):
+        if request.user.is_anonymous or UserAnime.objects.filter(user=request.user, is_favorite=True).count() == 0:
+            all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
+        
+            random_animes = random.sample(all_animes_sorted_by_popularity[:1000], 12)
+
+            serializer = AnimeSerializer(random_animes, many=True)
+            response_data = {
+                'animes': serializer.data,
+            }
+            return Response(response_data)
+
+        user_favorite_anime = UserAnime.objects.filter(user=request.user, is_favorite=True)
+        user_favorite_titles = [entry.anime.title for entry in user_favorite_anime]
+        user_favorite_genres = [entry.anime.genre for entry in user_favorite_anime]
+
+        all_animes = Anime.objects.all()
+        similar_animes = []
+
+        for anime in all_animes:
+            title_similarity_scores = [fuzz.ratio(title, anime.title) for title in user_favorite_titles]
+            title_average_similarity = sum(title_similarity_scores) / ( len(title_similarity_scores) + 0.01)
+
+            genre_similarity_scores = [fuzz.token_sort_ratio(genre, anime.genre) for genre in user_favorite_genres]
+            genre_average_similarity = sum(genre_similarity_scores) / ( len(genre_similarity_scores) + 0.01 )
+            # Add a small noise to the average similarity
+            noise = random.uniform(-0.5, 0.5)  # Adjust the range of noise as needed
+            similar_animes.append((anime, title_average_similarity + genre_average_similarity + noise))
+
+        similar_animes.sort(key=lambda x: x[1], reverse=True)
+        top_similar_animes = similar_animes[:12]
+
+        serializer = AnimeSerializer([anime[0] for anime in top_similar_animes], many=True)
         response_data = {
             'animes': serializer.data,
         }
@@ -34,6 +61,32 @@ class AnimeDetail(APIView):
         serializer = AnimeSerializer(anime)
         response_data = {
             'anime': serializer.data,
+        }
+
+        return Response(response_data)
+
+class AnimesSearchAPI(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        search_text = request.query_params.get('keyword', '')
+
+        all_animes = Anime.objects.all()
+        similar_animes = []
+
+        min_similarity_threshold = 70  # Adjust as needed
+
+        for anime in all_animes:
+            similarity_score = fuzz.partial_ratio(anime.title.lower(), search_text.lower())
+            if similarity_score >= min_similarity_threshold:
+                similar_animes.append((anime, similarity_score))
+
+        similar_animes.sort(key=lambda x: x[1], reverse=True)
+        top_similar_animes = similar_animes[:20]
+
+        serializer = AnimeSerializer([anime[0] for anime in top_similar_animes if anime[1] > min_similarity_threshold], many=True)
+        response_data = {
+            'animes': serializer.data,
         }
 
         return Response(response_data)
