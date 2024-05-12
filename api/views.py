@@ -12,16 +12,21 @@ import numpy as np
 import random
 from fuzzywuzzy import fuzz
 
+
+all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
+random_animes = all_animes_sorted_by_popularity[:1000]
+random.shuffle(random_animes)
+
 class AnimesAPI(APIView):
+    global random_animes
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
+        page = int(request.query_params.get('page', 1))
+        pageIndex = 24*(page - 1)
         if request.user.is_anonymous or UserAnime.objects.filter(user=request.user, is_favorite=True).count() == 0:
-            all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
-        
-            random_animes = random.sample(all_animes_sorted_by_popularity[:1000], 12)
-
-            serializer = AnimeSerializer(random_animes, many=True)
+            returned_animes = random_animes[pageIndex:pageIndex+24]
+            serializer = AnimeSerializer(returned_animes, many=True)
             response_data = {
                 'animes': serializer.data,
             }
@@ -45,9 +50,9 @@ class AnimesAPI(APIView):
             similar_animes.append((anime, title_average_similarity + genre_average_similarity + noise))
 
         similar_animes.sort(key=lambda x: x[1], reverse=True)
-        top_similar_animes = similar_animes[:12]
+        returned_similar_animes = similar_animes[pageIndex:pageIndex+24]
 
-        serializer = AnimeSerializer([anime[0] for anime in top_similar_animes], many=True)
+        serializer = AnimeSerializer([anime[0] for anime in returned_similar_animes], many=True)
         response_data = {
             'animes': serializer.data,
         }
