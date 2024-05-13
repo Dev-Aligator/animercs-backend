@@ -44,6 +44,15 @@ class UserAnime(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.anime.title}"
     
+class AnimeRecommendation(models.Model):
+    anime = models.OneToOneField(Anime, on_delete=models.CASCADE, related_name='recommendations', unique=True)
+    recommended_animes = models.ManyToManyField(Anime, related_name='recommended_by')
+
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"Recommendations for {self.anime.title}"
+    
 @receiver(post_save, sender=User)
 def create_user_feature(sender, instance, created, **kwargs):
     if created:
