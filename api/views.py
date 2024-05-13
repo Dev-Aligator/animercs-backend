@@ -14,9 +14,10 @@ from fuzzywuzzy import fuzz
 
 
 all_animes_sorted_by_popularity = list(Anime.objects.order_by('popularity'))
-random_animes = all_animes_sorted_by_popularity[:1000]
-random.shuffle(random_animes)
-
+top_1000_animes = all_animes_sorted_by_popularity[:1000]
+rest_of_animes = all_animes_sorted_by_popularity[1000:]
+random.shuffle(top_1000_animes)
+random_animes = top_1000_animes + rest_of_animes
 class AnimesAPI(APIView):
     global random_animes
     permission_classes = (permissions.AllowAny,)
@@ -61,11 +62,14 @@ class AnimesAPI(APIView):
 
 class AnimeDetail(APIView):
     permission_classes = (permissions.AllowAny,)
+
     def get(self, request, id):
         anime = Anime.objects.get(id=id)
         serializer = AnimeSerializer(anime)
+        similarAnimeSerializer = AnimeSerializer([anime[0] for anime in getSimilarAnimes(id) if anime[1] > 90], many=True)
         response_data = {
             'anime': serializer.data,
+            'similar_animes': similarAnimeSerializer.data,
         }
 
         return Response(response_data)
@@ -95,6 +99,22 @@ class AnimesSearchAPI(APIView):
         }
 
         return Response(response_data)
+    
+def getSimilarAnimes(animeId: str):
+    selectedAnime = Anime.objects.get(id=animeId)
+ 
+    all_animes = Anime.objects.exclude(id=animeId)
+    similar_animes = []
+
+    for anime in all_animes:
+        title_similarity_scores = fuzz.ratio(selectedAnime.title, anime.title)
+
+        genre_similarity_scores = fuzz.token_sort_ratio(selectedAnime.genre, anime.genre)
+
+        similar_animes.append((anime, title_similarity_scores + genre_similarity_scores))
+
+    similar_animes.sort(key=lambda x: x[1], reverse=True)
+    return similar_animes[:12]
 
 class AddUserAnime(APIView):
     permission_classes = (permissions.IsAuthenticated,)
