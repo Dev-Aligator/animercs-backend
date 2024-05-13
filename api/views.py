@@ -66,10 +66,8 @@ class AnimeDetail(APIView):
     def get(self, request, id):
         anime = Anime.objects.get(id=id)
         serializer = AnimeSerializer(anime)
-        similarAnimeSerializer = AnimeSerializer([anime[0] for anime in getSimilarAnimes(id) if anime[1] > 90], many=True)
         response_data = {
             'anime': serializer.data,
-            'similar_animes': similarAnimeSerializer.data,
         }
 
         return Response(response_data)
@@ -115,6 +113,18 @@ def getSimilarAnimes(animeId: str):
 
     similar_animes.sort(key=lambda x: x[1], reverse=True)
     return similar_animes[:12]
+
+class SimilarAnimes(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        id = request.query_params.get('id', '')
+        similarAnimeSerializer = AnimeSerializer([anime[0] for anime in getSimilarAnimes(id) if anime[1] > 90], many=True)
+        response_data = {
+            'similar_animes': similarAnimeSerializer.data,
+        }
+
+        return Response(response_data)
 
 class AddUserAnime(APIView):
     permission_classes = (permissions.IsAuthenticated,)
