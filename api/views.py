@@ -2,6 +2,7 @@ from rest_framework.response import Response, responses
 from rest_framework.decorators import api_view
 from base.models import Anime, UserFeature, User, UserAnime, AnimeRecommendation
 from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer, UserFeatureSerializer, AnimeSerializer
+from .services import GetSimilarAnimes, GetUserAnimesCollection
 from rest_framework import permissions, status
 from .validations import custom_validation, validate_email, validate_password
 from django.contrib.auth import get_user_model, login, logout
@@ -33,7 +34,7 @@ class AnimesAPI(APIView):
             }
             return Response(response_data)
 
-        user_favorite_anime = getUserAnimesCollection(request.user)
+        user_favorite_anime = GetUserAnimesCollection(request.user)
         user_favorite_titles = [entry.anime.title for entry in user_favorite_anime]
         user_favorite_genres = [entry.anime.genre for entry in user_favorite_anime]
 
@@ -99,48 +100,12 @@ class AnimesSearchAPI(APIView):
 
         return Response(response_data)
     
-def getSimilarAnimes(animeId: str):
-    selectedAnime = Anime.objects.get(id=animeId)
-    # Check if AnimeRecommendation exists
-    try:
-        animeRecommendation = AnimeRecommendation.objects.get(anime=selectedAnime)
-        considerated_animes = animeRecommendation.recommended_animes.all()
-        available_recommendations = True
-        print("YESS")
-    except AnimeRecommendation.DoesNotExist:
-        considerated_animes = list(Anime.objects.exclude(id=animeId))
-        available_recommendations = False
-
-    
-    similar_animes = []
-
-    for anime in considerated_animes:
-        title_similarity_scores = fuzz.ratio(selectedAnime.title, anime.title)
-
-        genre_similarity_scores = fuzz.token_sort_ratio(selectedAnime.genre, anime.genre)
-
-        similar_animes.append((anime, title_similarity_scores + genre_similarity_scores))
-
-    similar_animes.sort(key=lambda x: x[1], reverse=True)
-    recommendations = similar_animes[:12]
-    
-    if not available_recommendations:
-        # Store AnimeRecommendation
-        animeRecommendation = AnimeRecommendation.objects.create(anime=selectedAnime)
-        animeRecommendation.recommended_animes.set([anime[0] for anime in recommendations])
-        animeRecommendation.save()
-    return recommendations
-
-def getUserAnimesCollection(user, typeOfCollection="favourite"):
-    userAnimeCollection = UserAnime.objects.filter(user=user, is_favorite=True) if typeOfCollection == "favourite" else UserAnime.objects.filter(user=user, is_watchlist=True)
-    return userAnimeCollection
-
 class SimilarAnimes(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
         id = request.query_params.get('id', '')
-        similarAnimeSerializer = AnimeSerializer([anime[0] for anime in getSimilarAnimes(id) if anime[1] > 90], many=True)
+        similarAnimeSerializer = AnimeSerializer([anime[0] for anime in GetSimilarAnimes(id) if anime[1] > 90], many=True)
         response_data = {
             'similar_animes': similarAnimeSerializer.data,
         }
