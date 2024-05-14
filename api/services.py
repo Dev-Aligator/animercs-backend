@@ -36,3 +36,10 @@ def GetSimilarAnimes(animeId: str):
 def GetUserAnimesCollection(user, typeOfCollection="favourite"):
     userAnimeCollection = UserAnime.objects.filter(user=user, is_favorite=True) if typeOfCollection == "favourite" else UserAnime.objects.filter(user=user, is_watchlist=True)
     return userAnimeCollection
+
+def GetUserCollectionStatus(user, animeId):
+    try:
+        userAnime = UserAnime.objects.get(user=user, anime=animeId)
+        return {"is_favorite": userAnime.is_favorite, "is_watchlist": userAnime.is_watchlist}
+    except:
+        return {"is_favorite": False, "is_watchlist": False}

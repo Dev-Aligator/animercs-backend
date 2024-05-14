@@ -52,6 +52,24 @@ class AnimeRecommendation(models.Model):
 
     def __str__(self):
         return f"Recommendations for {self.anime.title}"
+
+class UserAnimeRecommendation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_recommendations')
+    recommended_animes = models.ManyToManyField(Anime, through='AnimeScore', related_name='recommended_to_users')
+
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"Recommendations for {self.user.username}"
+
+
+class AnimeScore(models.Model):
+    user_anime_recommendation = models.ForeignKey(UserAnimeRecommendation, on_delete=models.CASCADE, null=True)
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE)
+    score = models.FloatField()
+
+    def __str__(self):
+        return f"{self.anime.title}: {self.score}"
     
 @receiver(post_save, sender=User)
 def create_user_feature(sender, instance, created, **kwargs):
