@@ -163,6 +163,15 @@ class AddUserAnime(APIView):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
+    def get(self, request):
+        typeOfCollection = request.query_params.get('typeOfCollection', 'watchlist')
+        userAnimeCollection = GetUserAnimesCollection(request.user, typeOfCollection)
+        serializer = AnimeSerializer([entry.anime for entry in userAnimeCollection], many=True)
+        response_data = {
+            'collection': serializer.data,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+    
 class UserRegister(APIView):
     permission_classes = (permissions.AllowAny,)
     def get(self, request):

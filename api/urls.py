@@ -10,6 +10,7 @@ urlpatterns = [
     path('authenticate/',views.IsAuthenticated.as_view()),
     path('anime/<int:id>/', views.AnimeDetail.as_view()),
     path('anime/add-collection/', views.AddUserAnime.as_view()),
+    path('user/collection/', views.AddUserAnime.as_view()),
     path('anime-search/', views.AnimesSearchAPI.as_view()),
     path('anime/similar/', views.SimilarAnimes.as_view()),
    ]
