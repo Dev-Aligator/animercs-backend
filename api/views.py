@@ -2,7 +2,7 @@ from rest_framework.response import Response, responses
 from rest_framework.decorators import api_view
 from base.models import Anime, UserFeature, User, UserAnime, UserAnimeRecommendation, AnimeScore
 from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer, UserFeatureSerializer, AnimeSerializer
-from .services import GetSimilarAnimes, GetUserAnimesCollection, GetUserCollectionStatus
+from .services import GetSimilarAnimes, GetUserAnimesCollection, GetUserCollectionStatus, UserRecommendationsAnalysis
 from rest_framework import permissions, status
 from .validations import custom_validation, validate_email, validate_password
 from django.contrib.auth import get_user_model, login, logout
@@ -136,6 +136,26 @@ class SimilarAnimes(APIView):
         }
 
         return Response(response_data)
+    
+class AnimeRecommendation(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (SessionAuthentication,)
+
+    def get(self, request):
+        # userRecommendation = UserAnimeRecommendation.objects.get(user=request.user)
+        # recommended_animes = userRecommendation.recommended_animes.all()[:10]
+        # serializer = AnimeSerializer(recommended_animes, many=True)
+        # response_data = {
+        #     'recommendations': serializer.data,
+        # }
+        # print(serializer.data)
+
+        recommendations = UserRecommendationsAnalysis(request.user)
+        serializer = AnimeSerializer([entry[0] for entry in recommendations], many=True)
+        responses = {
+            'recommendations': serializer.data,
+        }
+        return Response(responses, status=status.HTTP_200_OK)
 
 class AddUserAnime(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -152,6 +172,7 @@ class AddUserAnime(APIView):
         typeOfCollection = data['typeOfCollection']
         if typeOfCollection == "favorite":
             userAnimeCollection.is_favorite = not userAnimeCollection.is_favorite 
+            userAnimeCollection.rating = data['rating']
             action = "Adding" if userAnimeCollection.is_favorite else "Removing"
         elif typeOfCollection == "watchlist":
             userAnimeCollection.is_watchlist = not userAnimeCollection.is_watchlist

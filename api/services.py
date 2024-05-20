@@ -1,5 +1,33 @@
 from base.models import Anime, AnimeRecommendation, UserAnime
 from fuzzywuzzy import fuzz
+from surprise.prediction_algorithms import SVD
+from surprise import Reader
+from surprise import Dataset
+import pandas as pd
+
+def UserRecommendationsAnalysis(user):
+    # Load the dataset
+    reader = Reader(rating_scale=(1, 10))
+    collectedData = pd.read_csv('api/user_rating.csv')
+    currentUser = GetUserAnimesCollection(user, "watchlist")
+
+    currentUser = currentUser.filter(rating__isnull=False)
+    currentUser = currentUser.values_list('user', 'anime_id', 'rating')
+    currentUser = pd.DataFrame(currentUser, columns=['user_id', 'anime_uid', 'User_rating'])
+    print(currentUser)
+    collectedData = pd.concat([collectedData, currentUser], ignore_index=True)
+    dataset = Dataset.load_from_df(collectedData, reader)
+    trainset = dataset.build_full_trainset()
+    # Train the model
+    algo = SVD()
+    algo.fit(trainset)
+    predictions = []
+    popular_animes = GetPopularunWatchedAnimes(user)
+    for anime in popular_animes:
+        pred = algo.predict(user.id, anime.id)
+        predictions.append((anime, pred.est))
+    predictions.sort(key=lambda x: x[1], reverse=True)
+    return predictions[:10]
 
 def GetSimilarAnimes(animeId: str):
     selectedAnime = Anime.objects.get(id=animeId)
@@ -8,7 +36,6 @@ def GetSimilarAnimes(animeId: str):
         animeRecommendation = AnimeRecommendation.objects.get(anime=selectedAnime)
         considerated_animes = animeRecommendation.recommended_animes.all()
         available_recommendations = True
-        print("YESS")
     except AnimeRecommendation.DoesNotExist:
         considerated_animes = list(Anime.objects.exclude(id=animeId))
         available_recommendations = False
@@ -43,3 +70,6 @@ def GetUserCollectionStatus(user, animeId):
         return {"is_favorite": userAnime.is_favorite, "is_watchlist": userAnime.is_watchlist}
     except:
         return {"is_favorite": False, "is_watchlist": False}
+    
+def GetPopularunWatchedAnimes(user):
+    return Anime.objects.exclude(useranime__user=user).order_by('popularity')[:5000]

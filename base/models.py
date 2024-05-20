@@ -38,7 +38,7 @@ class UserAnime(models.Model):
     anime = models.ForeignKey(Anime, on_delete=models.CASCADE)
     is_watchlist = models.BooleanField(default=False)
     is_favorite = models.BooleanField(default=False)
-
+    rating = models.SmallIntegerField(blank=True, null=True, default=10)
     objects = models.Manager()
 
     def __str__(self):

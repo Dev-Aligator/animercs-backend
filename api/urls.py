@@ -13,4 +13,5 @@ urlpatterns = [
     path('user/collection/', views.AddUserAnime.as_view()),
     path('anime-search/', views.AnimesSearchAPI.as_view()),
     path('anime/similar/', views.SimilarAnimes.as_view()),
+    path('user/recommendations/', views.AnimeRecommendation.as_view()),
    ]
