@@ -5,16 +5,19 @@ from surprise import Reader
 from surprise import Dataset
 import pandas as pd
 
+from pathlib import Path
+THIS_FOLDER = Path(__file__).parent.resolve()
 def UserRecommendationsAnalysis(user):
     # Load the dataset
     reader = Reader(rating_scale=(1, 10))
-    collectedData = pd.read_csv('api/user_rating.csv')
+    user_rating_file = THIS_FOLDER / "user_rating.csv"
+
+    collectedData = pd.read_csv(user_rating_file)
     currentUser = GetUserAnimesCollection(user, "watchlist")
 
     currentUser = currentUser.filter(rating__isnull=False)
     currentUser = currentUser.values_list('user', 'anime_id', 'rating')
     currentUser = pd.DataFrame(currentUser, columns=['user_id', 'anime_uid', 'User_rating'])
-    print(currentUser)
     collectedData = pd.concat([collectedData, currentUser], ignore_index=True)
     dataset = Dataset.load_from_df(collectedData, reader)
     trainset = dataset.build_full_trainset()
