@@ -29,7 +29,7 @@ class AnimesAPI(APIView):
 
         # If user is anonymous or has no favorite animes, return random animes
         if request.user.is_anonymous or not UserAnime.objects.filter(user=request.user, is_favorite=True).exists():
-            returned_animes = Anime.objects.order_by('?')[pageIndex:pageIndex+24]
+            returned_animes = random_animes[pageIndex:pageIndex+24]
             serializer = AnimeSerializer(returned_animes, many=True)
             return Response({'animes': serializer.data})
 
