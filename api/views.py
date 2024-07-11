@@ -1,11 +1,10 @@
-from rest_framework.response import Response, responses
-from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from base.models import Anime, UserFeature, User, UserAnime, UserAnimeRecommendation, AnimeScore
 from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer, UserFeatureSerializer, AnimeSerializer
 from .services import GetSimilarAnimes, GetUserAnimesCollection, GetUserCollectionStatus, UserRecommendationsAnalysis
 from rest_framework import permissions, status
 from .validations import custom_validation, validate_email, validate_password
-from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth import login, logout
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from .csrfDessionAuthentication import CsrfExemptSessionAuthentication, BasicAuthentication
